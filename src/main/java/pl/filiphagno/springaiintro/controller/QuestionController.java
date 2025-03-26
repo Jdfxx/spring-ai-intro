@@ -1,6 +1,7 @@
 package pl.filiphagno.springaiintro.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import pl.filiphagno.springaiintro.model.Answer;
 import pl.filiphagno.springaiintro.model.Question;
@@ -15,8 +16,8 @@ public class QuestionController {
         this.openAIService = openAIService;
     }
 
-    @PostMapping
-    public Answer getAnswer(Question question) {
+    @PostMapping("/ask")
+    public Answer getAnswer(@RequestBody Question question) {
         return openAIService.getAnswer(question);
     }
 }
