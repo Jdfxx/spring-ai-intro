@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import pl.filiphagno.springaiintro.model.Answer;
+import pl.filiphagno.springaiintro.model.CapitalResponse;
 import pl.filiphagno.springaiintro.model.GetCapitalRequest;
 import pl.filiphagno.springaiintro.model.Question;
 import pl.filiphagno.springaiintro.services.OpenAIService;
@@ -23,7 +24,12 @@ public class QuestionController {
     }
 
     @PostMapping("/capital")
-    public Answer getCapital(@RequestBody GetCapitalRequest getCapitalRequest) {
+    public CapitalResponse getCapital(@RequestBody GetCapitalRequest getCapitalRequest) {
         return this.openAIService.getCapital(getCapitalRequest);
+    }
+
+    @PostMapping("/capitalWithInfo")
+    public Answer getCapitalWithInfo(@RequestBody GetCapitalRequest getCapitalRequest) {
+        return this.openAIService.getCapitalWithInfo(getCapitalRequest);
     }
 }
