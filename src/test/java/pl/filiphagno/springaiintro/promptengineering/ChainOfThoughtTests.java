@@ -8,9 +8,7 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
-/**
- * Created by jt, Spring Framework Guru.
- */
+
 public class ChainOfThoughtTests extends BaseTestClass {
 
     @Autowired

@@ -12,9 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Created by jt, Spring Framework Guru.
- */
+
 @SpringBootTest
 public class ZeroAndFewShotTests extends BaseTestClass {
 

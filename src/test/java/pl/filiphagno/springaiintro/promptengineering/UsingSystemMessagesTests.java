@@ -10,9 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
-/**
- * Created by jt, Spring Framework Guru.
- */
+
 @SpringBootTest
 public class UsingSystemMessagesTests extends BaseTestClass {
 
