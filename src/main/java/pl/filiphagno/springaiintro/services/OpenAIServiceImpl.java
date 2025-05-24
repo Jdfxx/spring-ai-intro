@@ -1,10 +1,13 @@
 package pl.filiphagno.springaiintro.services;
 
+import org.springframework.ai.document.Document;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -13,12 +16,17 @@ import pl.filiphagno.springaiintro.model.CapitalResponse;
 import pl.filiphagno.springaiintro.model.GetCapitalRequest;
 import pl.filiphagno.springaiintro.model.Question;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class OpenAIServiceImpl implements OpenAIService {
 
     private final ChatModel chatModel;
+    private final SimpleVectorStore vectorStore;
+
+    @Value("classpath:/templates/rag-prompt-template.st")
+    private Resource ragPromptTemplate;
 
     @Value("classpath:templates/get-capital-prompt.st")
     private Resource getCapitalPrompt;
@@ -26,8 +34,9 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Value("classpath:templates/get-capital-with-info.st")
     private Resource getCapitalPromptWithInfo;
 
-    public OpenAIServiceImpl(ChatModel chatModel) {
+    public OpenAIServiceImpl(ChatModel chatModel, SimpleVectorStore vectorStore) {
         this.chatModel = chatModel;
+        this.vectorStore = vectorStore;
     }
 
     @Override
@@ -57,8 +66,15 @@ public class OpenAIServiceImpl implements OpenAIService {
 
     @Override
     public Answer getAnswer(Question question) {
-        PromptTemplate promptTemplate = new PromptTemplate(question.question());
-        Prompt prompt = promptTemplate.create();
+        List<Document> documents = vectorStore.similaritySearch(SearchRequest.builder()
+                .query(question.question()).topK(5).build());
+        List<String> contentList = documents.stream().map(Document::getText).toList();
+        PromptTemplate promptTemplate = new PromptTemplate(ragPromptTemplate);
+        Prompt prompt = promptTemplate.create(Map.of("input", question.question(), "documents",
+                String.join("\n", contentList)));
+
+        contentList.forEach(System.out::println);
+
         ChatResponse response = chatModel.call(prompt);
         return new Answer(response.getResult().getOutput().getText());
     }
