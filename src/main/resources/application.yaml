@@ -7,18 +7,19 @@ spring:
       embedding:
         options:
           model: text-embedding-3-small
-  vectorstore:
-    milvus:
-      client:
-        host: "localhost"
-        port: 19530
-        username: "root"
-        password: "milvus"
-      databaseName: "default"
-      collectionName: "vector_store"
-      embeddingDimension: 1536
-      indexType: IVF_FLAT
-      metricType: COSINE
+    vectorstore:
+      milvus:
+        client:
+          host: "localhost"
+          port: 19530
+          username: "root"
+          password: "milvus"
+        databaseName: "default"
+        collectionName: "vector_store"
+        embeddingDimension: 1536
+        indexType: IVF_FLAT
+        metricType: COSINE
+        initialize-schema: true
 sfg:
   aiapp:
     vectorStorePath: vectorstore.json
