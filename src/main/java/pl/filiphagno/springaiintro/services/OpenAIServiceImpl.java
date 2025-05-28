@@ -1,6 +1,7 @@
 package pl.filiphagno.springaiintro.services;
 
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -62,9 +63,12 @@ public class OpenAIServiceImpl implements OpenAIService {
                         .build()))
                 .build();
 
+        Message systemMessage = new SystemPromptTemplate("You are a weather service. You receive weather information from a service which gives you the information based on the metrics system." +
+                " When answering the weather in an imperial system country, you should convert the temperature to Fahrenheit and the wind speed to miles per hour. ").createMessage();
+
         Message userMessage = new PromptTemplate(question.question()).createMessage();
 
-        var response = chatModel.call(new Prompt(List.of(userMessage), promptOptions));
+        var response = chatModel.call(new Prompt(List.of(userMessage, systemMessage), promptOptions));
 
         return new Answer(response.getResult().getOutput().getText());
     }
