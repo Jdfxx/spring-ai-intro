@@ -32,4 +32,9 @@ public class QuestionController {
     public Answer getCapitalWithInfo(@RequestBody GetCapitalRequest getCapitalRequest) {
         return this.openAIService.getCapitalWithInfo(getCapitalRequest);
     }
+
+    @PostMapping("/weather")
+    public Answer askQuestion(@RequestBody Question question) {
+        return openAIService.getWeather(question);
+    }
 }

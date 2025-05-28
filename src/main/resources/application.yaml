@@ -22,6 +22,7 @@ spring:
         initialize-schema: true
 sfg:
   aiapp:
+    apiNinjasKey: ${NINJA_API_KEY}
     vectorStorePath: vectorstore.json
     documentsToLoad:
       - classpath:/towvehicles.txt

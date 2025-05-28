@@ -1,21 +1,21 @@
 package pl.filiphagno.springaiintro.services;
 
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.model.function.FunctionCallback;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import pl.filiphagno.springaiintro.model.Answer;
-import pl.filiphagno.springaiintro.model.CapitalResponse;
-import pl.filiphagno.springaiintro.model.GetCapitalRequest;
-import pl.filiphagno.springaiintro.model.Question;
+import pl.filiphagno.springaiintro.functions.WeatherServiceFunction;
+import pl.filiphagno.springaiintro.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -25,6 +25,9 @@ public class OpenAIServiceImpl implements OpenAIService {
 
     private final ChatModel chatModel;
     private final VectorStore vectorStore;
+
+    @Value("${sfg.aiapp.apiNinjasKey}")
+    private String apiNinjasKey;
 
     @Value("classpath:/templates/rag-prompt-template-meta.st")
     private Resource ragPromptTemplate;
@@ -45,6 +48,23 @@ public class OpenAIServiceImpl implements OpenAIService {
         PromptTemplate promptTemplate = new PromptTemplate(getCapitalPromptWithInfo);
         Prompt prompt = promptTemplate.create(Map.of("stateOrCountry", getCapitalRequest.stateOrCountry()));
         ChatResponse response = chatModel.call(prompt);
+
+        return new Answer(response.getResult().getOutput().getText());
+    }
+
+    @Override
+    public Answer getWeather(Question question) {
+        var promptOptions = OpenAiChatOptions.builder()
+                .functionCallbacks(List.of(FunctionCallback.builder()
+                        .function("CurrentWeather", new WeatherServiceFunction(apiNinjasKey))
+                        .description("Get the current weather for a location")
+                        .inputType(WeatherRequest.class)
+                        .build()))
+                .build();
+
+        Message userMessage = new PromptTemplate(question.question()).createMessage();
+
+        var response = chatModel.call(new Prompt(List.of(userMessage), promptOptions));
 
         return new Answer(response.getResult().getOutput().getText());
     }
