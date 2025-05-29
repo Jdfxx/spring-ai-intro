@@ -8,6 +8,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -15,6 +16,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import pl.filiphagno.springaiintro.functions.StockQuoteFunction;
 import pl.filiphagno.springaiintro.functions.WeatherServiceFunction;
 import pl.filiphagno.springaiintro.model.*;
 
@@ -42,6 +44,29 @@ public class OpenAIServiceImpl implements OpenAIService {
     public OpenAIServiceImpl(ChatModel chatModel, VectorStore vectorStore) {
         this.chatModel = chatModel;
         this.vectorStore = vectorStore;
+    }
+
+    @Override
+    public Answer getStockPrice(Question question) {
+        var promptOptions = OpenAiChatOptions.builder()
+                .functionCallbacks(List.of(FunctionCallback.builder()
+                        .function("CurrentStockPrice", new StockQuoteFunction(apiNinjasKey))
+                        .description("Get the current stock price for a stock symbol")
+                                .inputType(StockPriceRequest.class)
+                        .responseConverter((response) -> {
+                            String schema = ModelOptionsUtils.getJsonSchema(StockPriceResponse.class, false);
+                            String json = ModelOptionsUtils.toJsonString(response);
+                            return schema + "\n" + json;
+                        })
+                        .build()))
+                .build();
+
+        Message userMessage = new PromptTemplate(question.question()).createMessage();
+        Message systemMessage = new SystemPromptTemplate("You are an agent which returns back a stock price for the given stock symbol (or ticker)").createMessage();
+
+        var response = chatModel.call(new Prompt(List.of(userMessage, systemMessage), promptOptions));
+
+        return new Answer(response.getResult().getOutput().getContent());
     }
 
     @Override
