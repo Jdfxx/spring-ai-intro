@@ -47,6 +47,11 @@ public class OpenAIServiceImpl implements OpenAIService {
     }
 
     @Override
+    public byte[] getImage(Question question) {
+        return new byte[0];
+    }
+
+    @Override
     public Answer getStockPrice(Question question) {
         var promptOptions = OpenAiChatOptions.builder()
                 .functionCallbacks(List.of(FunctionCallback.builder()

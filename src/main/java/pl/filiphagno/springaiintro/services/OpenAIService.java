@@ -14,4 +14,6 @@ public interface OpenAIService {
     Answer getWeather(Question question);
 
     Answer getStockPrice(Question question);
+
+    byte[] getImage(Question question);
 }

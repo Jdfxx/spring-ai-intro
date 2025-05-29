@@ -1,5 +1,6 @@
 package pl.filiphagno.springaiintro.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,4 +43,10 @@ public class QuestionController {
     public Answer getStockPrice(@RequestBody Question question) {
         return openAIService.getStockPrice(question);
     }
+
+    @PostMapping(value = "/image", produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] getImage(Question question) {
+        return openAIService.getImage(question);
+    }
+
 }
