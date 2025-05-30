@@ -45,7 +45,7 @@ public class QuestionController {
     }
 
     @PostMapping(value = "/image", produces = MediaType.IMAGE_PNG_VALUE)
-    public byte[] getImage(Question question) {
+    public byte[] getImage(@RequestBody Question question) {
         return openAIService.getImage(question);
     }
 

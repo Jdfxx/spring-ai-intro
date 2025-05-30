@@ -8,9 +8,12 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.image.ImageModel;
+import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.OpenAiImageOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +23,7 @@ import pl.filiphagno.springaiintro.functions.StockQuoteFunction;
 import pl.filiphagno.springaiintro.functions.WeatherServiceFunction;
 import pl.filiphagno.springaiintro.model.*;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +32,7 @@ public class OpenAIServiceImpl implements OpenAIService {
 
     private final ChatModel chatModel;
     private final VectorStore vectorStore;
+    private final ImageModel imageModel;
 
     @Value("${sfg.aiapp.apiNinjasKey}")
     private String apiNinjasKey;
@@ -41,15 +46,27 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Value("classpath:templates/get-capital-with-info.st")
     private Resource getCapitalPromptWithInfo;
 
-    public OpenAIServiceImpl(ChatModel chatModel, VectorStore vectorStore) {
+    public OpenAIServiceImpl(ChatModel chatModel, VectorStore vectorStore, ImageModel imageModel) {
         this.chatModel = chatModel;
         this.vectorStore = vectorStore;
+        this.imageModel = imageModel;
     }
 
     @Override
     public byte[] getImage(Question question) {
-        return new byte[0];
+        var options = OpenAiImageOptions.builder()
+                .withHeight(1024).withWidth(1024)
+                .withResponseFormat("b64_json")
+                .withModel("dall-e-3")
+                .build();
+
+        ImagePrompt imagePrompt = new ImagePrompt(question.question(), options);
+
+        var imageResponse = imageModel.call(imagePrompt);
+
+        return Base64.getDecoder().decode(imageResponse.getResult().getOutput().getB64Json());
     }
+
 
     @Override
     public Answer getStockPrice(Question question) {
