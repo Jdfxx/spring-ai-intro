@@ -1,5 +1,6 @@
 package pl.filiphagno.springaiintro.services;
 
+import org.springframework.web.multipart.MultipartFile;
 import pl.filiphagno.springaiintro.model.Answer;
 import pl.filiphagno.springaiintro.model.CapitalResponse;
 import pl.filiphagno.springaiintro.model.GetCapitalRequest;
@@ -16,4 +17,6 @@ public interface OpenAIService {
     Answer getStockPrice(Question question);
 
     byte[] getImage(Question question);
+
+    String getDescription(MultipartFile file);
 }

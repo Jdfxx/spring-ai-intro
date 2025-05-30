@@ -1,6 +1,7 @@
 package pl.filiphagno.springaiintro.services;
 
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.chat.model.ChatModel;
@@ -10,15 +11,19 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.image.ImageModel;
 import org.springframework.ai.image.ImagePrompt;
+import org.springframework.ai.model.Media;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.OpenAiImageOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeTypeUtils;
+import org.springframework.web.multipart.MultipartFile;
 import pl.filiphagno.springaiintro.functions.StockQuoteFunction;
 import pl.filiphagno.springaiintro.functions.WeatherServiceFunction;
 import pl.filiphagno.springaiintro.model.*;
@@ -53,11 +58,27 @@ public class OpenAIServiceImpl implements OpenAIService {
     }
 
     @Override
+    public String getDescription(MultipartFile file) {
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+                .model(OpenAiApi.ChatModel.GPT_4_O.getValue())
+                .build();
+
+        var userMessage = new UserMessage("Explain what do you see in this picture?",
+                List.of(new Media(MimeTypeUtils.IMAGE_JPEG, file.getResource())));
+
+        ChatResponse response = chatModel.call(new Prompt(List.of(userMessage), options));
+
+        return response.getResult().getOutput().toString();
+    }
+
+    @Override
     public byte[] getImage(Question question) {
         var options = OpenAiImageOptions.builder()
                 .withHeight(1024).withWidth(1024)
                 .withResponseFormat("b64_json")
                 .withModel("dall-e-3")
+                .withQuality("hd")
+                .withStyle("natural")
                 .build();
 
         ImagePrompt imagePrompt = new ImagePrompt(question.question(), options);
