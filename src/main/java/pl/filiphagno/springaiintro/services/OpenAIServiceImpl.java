@@ -1,5 +1,7 @@
 package pl.filiphagno.springaiintro.services;
 
+import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
+import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
@@ -14,9 +16,11 @@ import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.model.Media;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.FunctionCallback;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.OpenAiImageOptions;
+import org.springframework.ai.openai.*;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.openai.api.OpenAiAudioApi;
+import org.springframework.ai.openai.audio.speech.SpeechPrompt;
+import org.springframework.ai.openai.audio.speech.SpeechResponse;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +42,7 @@ public class OpenAIServiceImpl implements OpenAIService {
     private final ChatModel chatModel;
     private final VectorStore vectorStore;
     private final ImageModel imageModel;
+    private final OpenAiAudioSpeechModel speechModel;
 
     @Value("${sfg.aiapp.apiNinjasKey}")
     private String apiNinjasKey;
@@ -51,10 +56,28 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Value("classpath:templates/get-capital-with-info.st")
     private Resource getCapitalPromptWithInfo;
 
-    public OpenAIServiceImpl(ChatModel chatModel, VectorStore vectorStore, ImageModel imageModel) {
+    public OpenAIServiceImpl(ChatModel chatModel, VectorStore vectorStore, ImageModel imageModel, OpenAiAudioSpeechModel speechModel) {
         this.chatModel = chatModel;
         this.vectorStore = vectorStore;
         this.imageModel = imageModel;
+        this.speechModel = speechModel;
+    }
+
+    @Override
+    public byte[] getSpeech(Question question) {
+        OpenAiAudioSpeechOptions speechOptions = OpenAiAudioSpeechOptions.builder()
+                .voice(OpenAiAudioApi.SpeechRequest.Voice.ALLOY)
+                .speed(1.0f)
+                .responseFormat(OpenAiAudioApi.SpeechRequest.AudioResponseFormat.MP3)
+                .model(OpenAiAudioApi.TtsModel.TTS_1.value)
+                .build();
+
+        SpeechPrompt speechPrompt = new SpeechPrompt(question.question(),
+                speechOptions);
+
+        SpeechResponse response = speechModel.call(speechPrompt);
+
+        return response.getResult().getOutput();
     }
 
     @Override

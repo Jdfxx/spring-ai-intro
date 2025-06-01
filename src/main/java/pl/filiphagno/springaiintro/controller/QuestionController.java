@@ -15,6 +15,7 @@ import pl.filiphagno.springaiintro.model.Question;
 import pl.filiphagno.springaiintro.services.OpenAIService;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 public class QuestionController {
@@ -61,6 +62,11 @@ public class QuestionController {
             @RequestParam("name") String name
     ) throws IOException {
         return ResponseEntity.ok(openAIService.getDescription(file));
+    }
+
+    @PostMapping(value ="/talk", produces = "audio/mpeg")
+    public byte[] talkTalk(@RequestBody Question question) {
+        return openAIService.getSpeech(question);
     }
 
 }
